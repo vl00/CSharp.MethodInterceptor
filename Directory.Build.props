@@ -1,0 +1,39 @@
+<Project>
+  <PropertyGroup>
+    <v__netcoreapp>net6.0</v__netcoreapp>
+    <v__netstandard>netstandard2.1</v__netstandard>
+    <SourceRoot>$(MSBuildThisFileDirectory)</SourceRoot>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <!--#region /.ob/ for no use -->
+  <ItemGroup>
+    <Compile Remove=".ob\**" />
+    <EmbeddedResource Remove=".ob\**" />
+    <None Remove=".ob\**" />
+    <Compile Remove=".tuse\**" />
+    <EmbeddedResource Remove=".tuse\**" />
+    <None Remove=".tuse\**" />
+  </ItemGroup>
+  <!--#endregion -->
+  
+  <!--#region App_g_Code for rg -->
+  <Target Name="rg_PreBuild" BeforeTargets="PreBuildEvent">
+    <ItemGroup>
+      <Compile Include="obj\rg\**" />
+    </ItemGroup>
+  </Target>
+  <!--#endregion App_g_Code for rg -->
+
+  <PropertyGroup>
+    <__no_use__>
+      <![CDATA[ 
+
+      ]]>
+    </__no_use__>
+  </PropertyGroup>
+
+</Project>
