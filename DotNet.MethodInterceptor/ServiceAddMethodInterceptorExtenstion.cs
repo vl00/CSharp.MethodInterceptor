@@ -78,9 +78,11 @@ public static class ServiceAddMethodInterceptorExtenstion
 
             var ctx = new ServiceAddMethodInterceptorContext(descriptor.ServiceType, descriptor.ImplementationType);
             var actions = services.GetOrSetServiceAddMethodInterceptorActionList(false);
-
-            foreach (var f in actions)
-                f?.Invoke(ctx);
+            if (actions != null)
+            {
+                foreach (var f in actions)
+                    f?.Invoke(ctx);
+            }
 
             if (ctx.Interceptors.Count < 1) continue;
 

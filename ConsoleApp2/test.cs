@@ -74,12 +74,11 @@ partial class Program_test_DispatchProxy2
             }
             await ctx.NextAsync();
         }
-    }
+    }    
 
     public async Task OnRunAsync()
     {
         var kk = services.GetService<ITestYL>();
-        //(kk as MethodInterceptorProxy).InvokeAsync(MethodBase.GetCurrentMethod(), PArray0());
         Debugger.Break();
         kk.F1();
         log.LogDebug("==============================================");

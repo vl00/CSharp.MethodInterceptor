@@ -202,7 +202,7 @@ public class MethodInterceptorProxy : DispatchProxy
                     }
                 case RetTyEnum.Task_T:
                     {                        
-                        return SetResult(this, rr, null);
+                        return SetResult(rr, null);
                     }
                 case RetTyEnum.ValueTask:
                     {
@@ -214,7 +214,7 @@ public class MethodInterceptorProxy : DispatchProxy
                     }
                 case RetTyEnum.ValueTask_T:
                     {
-                        return SetResult(this, null, rr);
+                        return SetResult(null, rr);
                     }
 
                 default:
@@ -236,13 +236,13 @@ public class MethodInterceptorProxy : DispatchProxy
                     return task;
 
                 case RetTyEnum.Task_T:
-                    return ToTypedTask(task, task);
+                    return ToTypedTask(task);
 
                 case RetTyEnum.ValueTask:
                     return new ValueTask(task);
 
                 case RetTyEnum.ValueTask_T:
-                    return ToTypedTask(task, null);
+                    return ToTypedValueTask(task);
             }
             throw new NotSupportedException();
         }
@@ -262,8 +262,9 @@ public class MethodInterceptorProxy : DispatchProxy
             return dict;
         }
 
-        public virtual Task SetResult(IMethodInvocation ctx, object t1, object t2) => throw new NotSupportedException();
-        public virtual object ToTypedTask(Task<object> task, object obj) => throw new NotSupportedException();
+        protected virtual Task SetResult(object t1, object t2) => throw new NotSupportedException();
+        protected virtual object ToTypedTask(Task<object> task) => throw new NotSupportedException();
+        protected virtual object ToTypedValueTask(Task<object> task) => throw new NotSupportedException();
 
         bool IEqualityComparer<string>.Equals(string x, string y) => string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
         int IEqualityComparer<string>.GetHashCode(string obj) => obj.ToLower().GetHashCode();
@@ -271,35 +272,33 @@ public class MethodInterceptorProxy : DispatchProxy
 
     class MethodInvocation<T> : MethodInvocation
     {
-        public override async Task SetResult(IMethodInvocation ctx, object t1, object t2)
-        {
+        protected override async Task SetResult(object t1, object t2)
+        {            
             if (t1 is Task<T> task)
             {
-                if (task.IsCompletedSuccessfully) ctx.Result = task.Result;
+                if (task.IsCompletedSuccessfully) this.Result = task.Result;
                 else
                 {
                     var r = await task.ConfigureAwait(false);
-                    ctx.Result = r;
+                    this.Result = r;
                 }
                 return;
             }
             if (t2 is ValueTask<T> vtk2)
             {
-                if (vtk2.IsCompletedSuccessfully) ctx.Result = vtk2.Result;
+                if (vtk2.IsCompletedSuccessfully) this.Result = vtk2.Result;
                 else
                 {
                     var r = await vtk2.ConfigureAwait(false);
-                    ctx.Result = r;
+                    this.Result = r;
                 }
                 return;
             }
         }
 
-        public override object ToTypedTask(Task<object> task, object obj)
-        {
-            if (ReferenceEquals(task, obj)) return To_TypedTask(task);
-            return To_TypedValueTask(task);
-        }
+        protected override object ToTypedTask(Task<object> task) => To_TypedTask(task);
+
+        protected override object ToTypedValueTask(Task<object> task) => To_TypedValueTask(task);
 
         static Task<T> To_TypedTask(Task<object> task)
         {
