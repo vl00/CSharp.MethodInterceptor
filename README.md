@@ -1,25 +1,9 @@
 # DotNet.MethodInterceptor
 
-see the sample code below:
+How to use? See the sample code below :
 
 ```
-using Common;
-using DotNet.MethodInterceptor;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
-using rg;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
+using ...
 
 namespace TestNs.DotNet.MethodInterceptor;
 
@@ -27,16 +11,9 @@ partial class Program_test_DispatchProxy2
 {
     public static void ConfigureServices(IServiceCollection services, IConfiguration config)
     {
-        //services.Insert(0, ServiceDescriptor.Singleton(services));
-
         services.AddTransient<ITestYL, TestYL>();
 
-        services.AddTransient(sp => 
-        {
-            var o = new Fx1_MethodInterceptor();
-            o.DInjectInit(sp);
-            return o;
-        });
+        services.AddTransient<Fx1_MethodInterceptor>();
         services.AddTransient<Fx2_MethodInterceptor>();
 
         services.TryAddMethodInterceptor<TestYL, Fx1_MethodInterceptor>();
@@ -51,8 +28,6 @@ partial class Program_test_DispatchProxy2
 
     partial class Fx1_MethodInterceptor : IMethodInterceptor
     {
-        [DInject] ILogger log;
-
         public async Task InvokeAsync(IMethodInvocation ctx)
         {
             log.LogInformation($"before call {ctx.Method.Name}");
@@ -84,7 +59,6 @@ partial class Program_test_DispatchProxy2
     public async Task OnRunAsync()
     {
         var kk = services.GetService<ITestYL>();
-        //(kk as MethodInterceptorProxy).InvokeAsync(MethodBase.GetCurrentMethod(), PArray0());
         Debugger.Break();
         kk.F1();
         log.LogDebug("==============================================");
