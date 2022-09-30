@@ -198,7 +198,7 @@ public class MethodInterceptorProxy : DispatchProxy
             {                
                 case RetTyEnum.Task:
                     {
-#if NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER || NETCOREAPP3_1_OR_GREATER
                         return Unsafe.As<object, Task>(ref rr);
 #else
                         return (Task)rr;

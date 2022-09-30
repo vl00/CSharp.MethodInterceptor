@@ -69,7 +69,7 @@ public static class ServiceAddMethodInterceptorExtenstion
         return ls;
     }
 
-    public static void ResolveServiceTypeAndMethodInterceptors(this IServiceCollection services)
+    public static void ResolveServiceTypeAndMethodInterceptors(this IServiceCollection services, bool shouldDistinctSameInterceptorTypes = false)
     {
         for (int i = 0, len = services.Count; i < len; i++)
         {
@@ -84,10 +84,11 @@ public static class ServiceAddMethodInterceptorExtenstion
                     f?.Invoke(ctx);
             }
 
-            if (ctx.Interceptors.Count < 1) continue;
+            var interceptorTypes = shouldDistinctSameInterceptorTypes ? ctx.Interceptors.Distinct() : ctx.Interceptors;
+            if (!interceptorTypes.Any()) continue;
 
             // resolve
-            descriptor = ServiceDescriptor.Describe(descriptor.ServiceType, GetCreateInstanceFunc(descriptor.ServiceType, descriptor.ImplementationType, ctx.Interceptors), descriptor.Lifetime);
+            descriptor = ServiceDescriptor.Describe(descriptor.ServiceType, GetCreateInstanceFunc(descriptor.ServiceType, descriptor.ImplementationType, interceptorTypes), descriptor.Lifetime);
 
             services[i] = descriptor;
         }
@@ -96,7 +97,7 @@ public static class ServiceAddMethodInterceptorExtenstion
         if (d != null) services.Remove(d);
     }
 
-    static Func<IServiceProvider, object> GetCreateInstanceFunc(Type serviceType, Type implementationType, IList<Type> interceptorTypes)
+    static Func<IServiceProvider, object> GetCreateInstanceFunc(Type serviceType, Type implementationType, IEnumerable<Type> interceptorTypes)
     {
         return (sp) => 
         {
