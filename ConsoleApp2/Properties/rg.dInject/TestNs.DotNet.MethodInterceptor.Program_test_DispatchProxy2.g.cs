@@ -6,7 +6,7 @@ using Common.DI;
 using System;
 using System.Collections.Generic; 
 
-namespace TestNs.DotNet.MethodInterceptor
+namespace TestNs.CSharp.MethodInterceptor
 { 
 	partial class Program_test_DispatchProxy2 : rg.__IDInjectInit__
 	{ 
@@ -16,9 +16,9 @@ namespace TestNs.DotNet.MethodInterceptor
 	
 	    protected virtual void __DInjectInit__(System.IServiceProvider di) 
 	    { 
-	        TestNs.DotNet.MethodInterceptor.Program_test_DispatchProxy2.services = di; 
-	        TestNs.DotNet.MethodInterceptor.Program_test_DispatchProxy2.log = di.GetService<Microsoft.Extensions.Logging.ILogger>(); 
-	        TestNs.DotNet.MethodInterceptor.Program_test_DispatchProxy2.config = di.GetService<Microsoft.Extensions.Configuration.IConfiguration>(); 
+	        TestNs.CSharp.MethodInterceptor.Program_test_DispatchProxy2.services = di; 
+	        TestNs.CSharp.MethodInterceptor.Program_test_DispatchProxy2.log = di.GetService<Microsoft.Extensions.Logging.ILogger>(); 
+	        TestNs.CSharp.MethodInterceptor.Program_test_DispatchProxy2.config = di.GetService<Microsoft.Extensions.Configuration.IConfiguration>(); 
 	    }
 	
 	    static string __DInjectInit____rg_di_key_error__(System.Exception ex) => throw ex;

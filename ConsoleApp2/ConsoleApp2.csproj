@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DotNet.MethodInterceptor\DotNet.MethodInterceptor.csproj" />
+    <ProjectReference Include="..\CSharp.MethodInterceptor\CSharp.MethodInterceptor.csproj" />
   </ItemGroup>
 
 </Project>

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DotNet.MethodInterceptor;
+namespace CSharp.MethodInterceptor;
 
 public class ServiceAddMethodInterceptorContext
 {

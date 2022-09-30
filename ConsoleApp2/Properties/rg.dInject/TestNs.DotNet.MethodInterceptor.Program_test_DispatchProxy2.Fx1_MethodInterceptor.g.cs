@@ -6,7 +6,7 @@ using Common.DI;
 using System;
 using System.Collections.Generic; 
 
-namespace TestNs.DotNet.MethodInterceptor
+namespace TestNs.CSharp.MethodInterceptor
 { 
 	partial class Program_test_DispatchProxy2
 	{

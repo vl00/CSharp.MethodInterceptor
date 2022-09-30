@@ -1,11 +1,11 @@
-# DotNet.MethodInterceptor
+# CSharp.MethodInterceptor
 
 How to use? See the sample code below :
 
 ```
 using ...
 
-namespace TestNs.DotNet.MethodInterceptor;
+namespace ...
 
 partial class Program_test_DispatchProxy2
 {

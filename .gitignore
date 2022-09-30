@@ -162,10 +162,5 @@ $RECYCLE.BIN/
 .ob/
 log.7z
 rg.info.json
-/ConsoleApp1/src_*
-/ConsoleApp1/Startup.cs
-/ConsoleApp2/src_*
-/ConsoleApp2/Startup2.cs
 /data
-
-/ConsoleApp0
+all.sln

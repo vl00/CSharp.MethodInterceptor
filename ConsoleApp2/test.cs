@@ -1,5 +1,5 @@
 ﻿using Common;
-using DotNet.MethodInterceptor;
+using CSharp.MethodInterceptor;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -16,7 +16,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TestNs.DotNet.MethodInterceptor;
+namespace TestNs.CSharp.MethodInterceptor;
 
 partial class Program_test_DispatchProxy2
 {
