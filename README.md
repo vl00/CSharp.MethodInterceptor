@@ -6,7 +6,7 @@ A sample <b>aop</b> implementation base on System.Reflection.DispatchProxy. It a
 
 How to use? See the sample code below: (也可以运行项目ConsoleApp2)
 
-```
+```c#
 using ...
 
 namespace ...
