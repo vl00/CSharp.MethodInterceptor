@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace CSharp.MethodInterceptor;
@@ -38,8 +37,12 @@ public class MethodInterceptorProxy : DispatchProxy
 
     public static MethodInterceptorProxy NewProxy(Type type)
     {
-        var mi = typeof(DispatchProxy).GetMethod(nameof(Create), BindingFlags.Public | BindingFlags.Static);
+#if NET8_0_OR_GREATER
+        return DispatchProxy.Create(type, typeof(MethodInterceptorProxy)) as MethodInterceptorProxy;
+#else
+        var mi = typeof(DispatchProxy).GetMethod(nameof(Create), 2, BindingFlags.Public | BindingFlags.Static, null, Type.EmptyTypes, null);
         return mi.MakeGenericMethod(type, typeof(MethodInterceptorProxy)).Invoke(null, null) as MethodInterceptorProxy;
+#endif
     }
 
     public static T New<T>(T obj, IEnumerable<object> intercepters = null)
@@ -274,7 +277,7 @@ public class MethodInterceptorProxy : DispatchProxy
         int IEqualityComparer<string>.GetHashCode(string obj) => obj.ToLower().GetHashCode();
     }    
 
-    class MethodInvocation<T> : MethodInvocation
+    sealed class MethodInvocation<T> : MethodInvocation
     {
         protected override async Task SetResult(object t1, object t2)
         {            

@@ -2,7 +2,7 @@
 
 [![NuGet](https://img.shields.io/nuget/v/CSharp.MethodInterceptor.svg?style=flat)](https://www.nuget.org/packages/CSharp.MethodInterceptor#versions-body-tab)
 
-A sample <b>aop</b> implementation base on System.Reflection.DispatchProxy. It also work well on async/await method.
+A sample <b>aop</b> implementation base on System.Reflection.DispatchProxy. It also work well on async-await and sync method.
 
 How to use? See the sample code below: (也可以运行项目ConsoleApp2)
 

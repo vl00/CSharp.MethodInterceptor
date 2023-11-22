@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <v__netcoreapp>net6.0</v__netcoreapp>
+    <v__netcoreapp>net8.0</v__netcoreapp>
     <v__netstandard>netstandard2.1</v__netstandard>
     <SourceRoot>$(MSBuildThisFileDirectory)</SourceRoot>
   </PropertyGroup>
