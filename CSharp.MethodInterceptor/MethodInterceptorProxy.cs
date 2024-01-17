@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
@@ -24,7 +24,7 @@ public interface IMethodInvocation
 
 public interface IMethodInterceptor
 {
-    public Task InvokeAsync(IMethodInvocation ctx);
+    Task InvokeAsync(IMethodInvocation ctx);
 }
 
 public class MethodInterceptorProxy : DispatchProxy
@@ -94,16 +94,16 @@ public class MethodInterceptorProxy : DispatchProxy
         ValueTask_T = 4,    // ValueTask<T>
     }
 
-    class MethodInvocation : IMethodInvocation, IEqualityComparer<string>
+    class MethodInvocation : IMethodInvocation
     {
-        Lazy<IReadOnlyDictionary<string, object>> _lazyArgumentsDictionary;
+        Lazy<ReadOnlyArgumentsDictionary> _argsDictionary;
         RetTyEnum _ret;
         internal IEnumerator<object> _intercepters;
 
         public object Instance { get; set; }
         public MethodInfo Method { get; set; }
         public object[] Arguments { get; set; }
-        public IReadOnlyDictionary<string, object> ArgumentsDictionary => _lazyArgumentsDictionary.Value;
+        public IReadOnlyDictionary<string, object> ArgumentsDictionary => _argsDictionary.Value;
         public object Result { get; set; }
 
         internal static MethodInvocation Create(object instance, MethodInfo method, object[] args)
@@ -120,9 +120,9 @@ public class MethodInterceptorProxy : DispatchProxy
             ctx.Method = method;
             ctx.Arguments = args;
             ctx._ret = _ret;
-            ctx._lazyArgumentsDictionary = new Lazy<IReadOnlyDictionary<string, object>>(ctx.GetArgumentsDictionaryTryKeyIgnoreCase);
+            ctx._argsDictionary = new(() => new(ctx.Method, ctx.Arguments));
             return ctx;
-        }        
+        }
 
         internal static void EnsureRetTyEnum(MethodInfo method, out RetTyEnum _ret)
         {
@@ -209,7 +209,7 @@ public class MethodInterceptorProxy : DispatchProxy
                     }
                 case RetTyEnum.Task_T:
                     {                        
-                        return SetResult(rr, null);
+                        return SetTaskResult(rr);
                     }
                 case RetTyEnum.ValueTask:
                     {
@@ -221,7 +221,7 @@ public class MethodInterceptorProxy : DispatchProxy
                     }
                 case RetTyEnum.ValueTask_T:
                     {
-                        return SetResult(null, rr);
+                        return SetValueTaskResult(rr);
                     }
 
                 default:
@@ -254,34 +254,17 @@ public class MethodInterceptorProxy : DispatchProxy
             throw new NotSupportedException();
         }
 
-        IReadOnlyDictionary<string, object> GetArgumentsDictionaryTryKeyIgnoreCase()
-        {
-            var dict = new Dictionary<string, object>(this);
-            var args = Method.GetParameters();
-            for (int i = 0, len = args.Length; i < len; i++)
-            {
-                // 尝试使用参数名忽略大小写
-                if (dict.TryAdd(args[i].Name, Arguments[i])) continue;
-                var d = new Dictionary<string, object>(dict);
-                d[args[i].Name] = Arguments[i];
-                dict = d;
-            }
-            return dict;
-        }
-
-        protected virtual Task SetResult(object t1, object t2) => throw new NotSupportedException();
+        protected virtual Task SetTaskResult(object t) => throw new NotSupportedException();
+        protected virtual Task SetValueTaskResult(object t) => throw new NotSupportedException();
         protected virtual object ToTypedTask(Task<object> task) => throw new NotSupportedException();
         protected virtual object ToTypedValueTask(Task<object> task) => throw new NotSupportedException();
-
-        bool IEqualityComparer<string>.Equals(string x, string y) => string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
-        int IEqualityComparer<string>.GetHashCode(string obj) => obj.ToLower().GetHashCode();
-    }    
+    }
 
     sealed class MethodInvocation<T> : MethodInvocation
     {
-        protected override async Task SetResult(object t1, object t2)
+        protected override async Task SetTaskResult(object t)
         {            
-            if (t1 is Task<T> task)
+            if (t is Task<T> task)
             {
                 if (task.IsCompletedSuccessfully) this.Result = task.Result;
                 else
@@ -289,9 +272,12 @@ public class MethodInterceptorProxy : DispatchProxy
                     var r = await task.ConfigureAwait(false);
                     this.Result = r;
                 }
-                return;
             }
-            if (t2 is ValueTask<T> vtk2)
+        }
+
+        protected override async Task SetValueTaskResult(object t)
+        {
+            if (t is ValueTask<T> vtk2)
             {
                 if (vtk2.IsCompletedSuccessfully) this.Result = vtk2.Result;
                 else
@@ -299,7 +285,6 @@ public class MethodInterceptorProxy : DispatchProxy
                     var r = await vtk2.ConfigureAwait(false);
                     this.Result = r;
                 }
-                return;
             }
         }
 
@@ -352,5 +337,83 @@ public class MethodInterceptorProxy : DispatchProxy
             }
             return (T)result;
         }
-    }       
+    }
+}
+
+public sealed class ReadOnlyArgumentsDictionary : IReadOnlyDictionary<string, object>, IEqualityComparer<string>
+{
+    readonly Dictionary<string, int> _argsIdxs;
+    readonly object[] Arguments;
+
+    public ReadOnlyArgumentsDictionary(MethodInfo method, object[] arguments)
+    {
+        Arguments = arguments;
+        _argsIdxs = new Dictionary<string, int>(this);
+
+        var parameters = method.GetParameters();
+        for (int i = 0, len = parameters.Length; i < len; i++)
+        {
+            // 尝试使用参数名忽略大小写
+            if (_argsIdxs.TryAdd(parameters[i].Name, i)) continue;
+            _argsIdxs[parameters[i].Name] = i;
+        }
+    }
+
+    bool IEqualityComparer<string>.Equals(string x, string y) => string.Equals(x, y, StringComparison.OrdinalIgnoreCase);
+    int IEqualityComparer<string>.GetHashCode(string obj) => obj.ToLower().GetHashCode();
+
+    IEnumerable<string> IReadOnlyDictionary<string, object>.Keys => _argsIdxs?.Keys ?? Enumerable.Empty<string>();
+    IEnumerable<object> IReadOnlyDictionary<string, object>.Values => Arguments;
+
+    public int Count => Arguments?.Length ?? 0;
+
+    public object this[string key] => TryGetValue(key, out var v) ? v : null;
+
+    public bool ContainsKey(string key) => _argsIdxs?.ContainsKey(key) ?? false;
+
+    public bool TryGetValue(string key, out object value)
+    {
+        value = null;
+        if (_argsIdxs?.TryGetValue(key, out var i) != true) return false;
+        value = Arguments[i];
+        return true;
+    }
+
+    public Enumerator GetEnumerator() => new(this);
+    
+    IEnumerator<KeyValuePair<string, object>> IEnumerable<KeyValuePair<string, object>>.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public struct Enumerator : IEnumerator<KeyValuePair<string, object>>, IEnumerator
+    {
+        readonly ReadOnlyArgumentsDictionary _this;
+        Dictionary<string, int>.Enumerator _idxs;
+
+        internal Enumerator(ReadOnlyArgumentsDictionary _this)
+        {
+            this._this = _this;
+            _idxs = _this._argsIdxs?.GetEnumerator() ?? default;
+        }
+
+        public KeyValuePair<string, object> Current
+        {
+            get
+            {
+                var kv = _idxs.Current;
+                return KeyValuePair.Create(kv.Key, _this.Arguments[kv.Value]);
+            }
+        }
+
+        object IEnumerator.Current => Current;
+
+        public bool MoveNext() => _idxs.MoveNext();
+
+        void IEnumerator.Reset()
+        {
+            _idxs.Dispose();
+            _idxs = _this._argsIdxs.GetEnumerator();
+        }
+
+        public void Dispose() { }
+    }
 }

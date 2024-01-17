@@ -34,7 +34,7 @@ public class ServiceAddMethodInterceptorContext
     }
 }
 
-internal class ServiceAddMethodInterceptorActionList : List<Action<ServiceAddMethodInterceptorContext>> { }
+internal sealed class ServiceAddMethodInterceptorActionList : List<Action<ServiceAddMethodInterceptorContext>> { }
 
 public static class ServiceAddMethodInterceptorExtenstion
 {
@@ -89,7 +89,6 @@ public static class ServiceAddMethodInterceptorExtenstion
 
             // resolve
             descriptor = ServiceDescriptor.Describe(descriptor.ServiceType, GetCreateInstanceFunc(descriptor.ServiceType, descriptor.ImplementationType, interceptorTypes), descriptor.Lifetime);
-
             services[i] = descriptor;
         }
 
